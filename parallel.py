@@ -9,7 +9,6 @@ import threading
 import queue
 import time
 
-# Initialize a thread-safe queue for image display
 image_queue = queue.Queue()
 
 # Function to display images
@@ -128,7 +127,6 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 X_train_features = np.array([process_image(img)[0] for img in X_train])
 svm_classifier = train_svm(X_train_features, y_train)
 
-# Use the trained SVM to predict hand direction in real-time (replace with actual video capture)
 cap = cv2.VideoCapture(0)
 direction_queue = queue.Queue()
 pyautogui_thread = threading.Thread(target=pyautogui_thread, args=(direction_queue,))
@@ -145,26 +143,20 @@ while True:
     if not ret:
         break
 
-    # Resize the frame to match the training data size
     frame = cv2.resize(frame, (64, 64))
 
-    # Process the image using concurrent.futures
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = [executor.submit(process_image, frame)]
         results = [future.result() for future in concurrent.futures.as_completed(futures)]
 
     hog_features, segmented_hand = results[0]
 
-    # Put the segmented hand in the queue for display
     image_queue.put(segmented_hand)
 
-    # Predict hand direction
     direction = predict_hand_direction(svm_classifier, hog_features)
 
-    # Print the predicted direction
     print(f"Predicted Direction: {direction}")
 
-    # Put the direction in the queue for the pyautogui thread
     direction_queue.put(direction)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
