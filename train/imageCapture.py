@@ -1,23 +1,17 @@
 import cv2
 import numpy as np
 
-# Create a VideoCapture object
 cap = cv2.VideoCapture(0)
 
-# Initialize variables
 image_count = 0
 positive_images = []
 negative_images = []
 
 while True:
-    # Capture frame-by-frame
     ret, frame = cap.read()
     frame = cv2.resize(frame, (32, 32))
-
-    # Display the frame
     cv2.imshow('Capture Images', frame)
 
-    # Check for key press
     key = cv2.waitKey(1) & 0xFF
 
     # 'p' key for positive image
@@ -34,11 +28,9 @@ while True:
     elif key == ord('q'):
         break
 
-# Release the camera and close the window
 cap.release()
 cv2.destroyAllWindows()
 
-# Save captured images with labels
 for i, img in enumerate(positive_images):
     cv2.imwrite(f'positive_image_{i+1}.jpg', img)
 
