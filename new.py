@@ -3,8 +3,8 @@ import numpy as np
 from sklearn.svm import SVC
 from skimage.feature import hog
 import joblib
-
 import time
+import pyautogui
 
 def compute_hog_features(image):
     # Convert the image to grayscale if it has more than 2 dimensions
@@ -35,7 +35,7 @@ desired_height = 32
 # Initialize variables for optical flow
 old_gray = None
 p0 = None
-no_movement_threshold = 0.2  # Adjust this threshold as needed
+no_movement_threshold = 0.2  # the threshold of the smallest movement 
 
 while True:
     start_time = time.time()
@@ -71,13 +71,13 @@ while True:
     # Predict hand orientation using the trained SVM classifier
     orientation_prediction = svm_classifier.predict(hog_features)
 
-    # Apply Optical Flow
+    # Apply Optical Flow -> detect the motion direction 
     if old_gray is not None and p0 is not None:
         p1, st, err = cv2.calcOpticalFlowPyrLK(old_gray, frame_gray, p0, None, **lk_params)
         good_new = p1[st == 1]
         good_old = p0[st == 1]
 
-        # Calculate the average motion vector
+        # Calculate the average motion vector -> 
         if len(good_new) > 0:
             average_motion_vector = np.mean(good_new - good_old, axis=0)
 
@@ -85,15 +85,19 @@ while True:
             if np.abs(average_motion_vector[0]) > np.abs(average_motion_vector[1]):
                 if average_motion_vector[0] > no_movement_threshold:
                     print("Movement Direction: Right")
+                    pyautogui.press('right') 
                 elif average_motion_vector[0] < -no_movement_threshold:
                     print("Movement Direction: Left")
+                    pyautogui.press('left')
                 else:
                     print("No Operation (Not moving horizontally)")
             else:
                 if average_motion_vector[1] > no_movement_threshold:
                     print("Movement Direction: Down")
+                    pyautogui.press('down')
                 elif average_motion_vector[1] < -no_movement_threshold:
                     print("Movement Direction: Up")
+                    pyautogui.press('up')  # Press the up arrow key
                 else:
                     print("No Operation (Not moving vertically)")
 
