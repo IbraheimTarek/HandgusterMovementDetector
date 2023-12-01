@@ -1,5 +1,5 @@
 import cv2
-import numpy as np
+import os
 
 cap = cv2.VideoCapture(0)
 
@@ -31,11 +31,23 @@ while True:
 cap.release()
 cv2.destroyAllWindows()
 
+# Save positive images
 for i, img in enumerate(positive_images):
-    cv2.imwrite(f'positive_image_{i+1}.jpg', img)
+    # Find a unique filename
+    img_number = 1
+    while os.path.exists(f'positive_image_{img_number}.jpg'):
+        img_number += 1
 
+    cv2.imwrite(f'positive_image_{img_number}.jpg', img)
+
+# Save negative images
 for i, img in enumerate(negative_images):
-    cv2.imwrite(f'negative_image_{i+1}.jpg', img)
+    # Find a unique filename
+    img_number = 1
+    while os.path.exists(f'negative_image_{img_number}.jpg'):
+        img_number += 1
+
+    cv2.imwrite(f'negative_image_{img_number}.jpg', img)
 
 print(f'Total positive images: {len(positive_images)}')
 print(f'Total negative images: {len(negative_images)}')

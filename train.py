@@ -53,6 +53,8 @@ if len(images) == 0 or len(labels) == 0:
     exit()
 
 # Split the data into training and testing sets
+#test_size=0.2 means that 20% of the data will be reserved for testing, and the remaining 80% will be used for training.
+
 X_train, X_test, y_train, y_test = train_test_split(hog_features, labels, test_size=0.2, random_state=42)
 
 if len(X_train) == 0 or len(y_train) == 0:
