@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.svm import SVC
 from skimage.feature import hog
 import joblib
+
 import time
 
 def compute_hog_features(image):
