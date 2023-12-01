@@ -62,7 +62,7 @@ svm_classifier = SVC(kernel='linear')
 svm_classifier.fit(X_train, y_train)
 
 # Save the trained classifier and change the name upon using a different image size other than in the train folder
-joblib.dump(svm_classifier, 'trained_classifier_32bit_2.pkl')
+joblib.dump(svm_classifier, 'trained_classifier_64bit.pkl')
 
 # Evaluate the classifier on the test set
 y_pred = svm_classifier.predict(X_test)

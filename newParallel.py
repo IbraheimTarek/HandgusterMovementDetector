@@ -23,7 +23,7 @@ def process_frame(frame):
 
     segmented_hand = cv2.bitwise_and(frame, frame, mask=fg_mask)
 
-    hog_features = compute_hog_features(segmented_hand)
+    hog_features = compute_hog_features(frame)
     hog_features = hog_features.reshape(1, -1)
 
     orientation_prediction = svm_classifier.predict(hog_features)
@@ -54,7 +54,7 @@ def output_direction(good_new, good_old,orientation_prediction):
                 print("No Operation (Not moving vertically)")
 
 # Load the trained SVM classifier
-svm_classifier = joblib.load('trained_classifier_32bit_2.pkl')
+svm_classifier = joblib.load('trained_classifier_64bit.pkl')
 
 # Create a background subtractor
 background_subtractor = cv2.createBackgroundSubtractorMOG2()
@@ -63,8 +63,8 @@ background_subtractor = cv2.createBackgroundSubtractorMOG2()
 cap = cv2.VideoCapture(0)
 
 # Set the desired width and height for the resized frame
-desired_width = 32
-desired_height = 32
+desired_width = 64
+desired_height = 64
 
 # Initialize variables for optical flow
 old_gray = None
@@ -98,7 +98,8 @@ with concurrent.futures.ThreadPoolExecutor() as executor:
             good_old = p0[st == 1]
 
             # Parallelize the computation of average motion vector and decision-making
-            executor.submit(output_direction, good_new, good_old,orientation_prediction)
+            if(orientation_prediction):
+                executor.submit(output_direction, good_new, good_old,orientation_prediction)
 
             p0 = good_new.reshape(-1, 1, 2)
 

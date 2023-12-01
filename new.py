@@ -63,7 +63,7 @@ while True:
     segmented_hand = cv2.bitwise_and(frame, frame, mask=fg_mask)
 
     # Compute HOG features for the segmented hand
-    hog_features = compute_hog_features(segmented_hand)
+    hog_features = compute_hog_features(frame)
 
     # Reshape the features to match the expected input shape for the SVM classifier
     hog_features = hog_features.reshape(1, -1)
@@ -83,19 +83,19 @@ while True:
 
             # Determine movement direction based on the components of the motion vector
             if np.abs(average_motion_vector[0]) > np.abs(average_motion_vector[1]):
-                if average_motion_vector[0] > no_movement_threshold:
+                if average_motion_vector[0] > no_movement_threshold and orientation_prediction:
                     print("Movement Direction: Right")
                     pyautogui.press('right') 
-                elif average_motion_vector[0] < -no_movement_threshold:
+                elif average_motion_vector[0] < -no_movement_threshold and orientation_prediction:
                     print("Movement Direction: Left")
                     pyautogui.press('left')
                 else:
                     print("No Operation (Not moving horizontally)")
             else:
-                if average_motion_vector[1] > no_movement_threshold:
+                if average_motion_vector[1] > no_movement_threshold and orientation_prediction:
                     print("Movement Direction: Down")
                     pyautogui.press('down')
-                elif average_motion_vector[1] < -no_movement_threshold:
+                elif average_motion_vector[1] < -no_movement_threshold and orientation_prediction:
                     print("Movement Direction: Up")
                     pyautogui.press('up')  # Press the up arrow key
                 else:

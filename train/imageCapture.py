@@ -9,7 +9,7 @@ negative_images = []
 
 while True:
     ret, frame = cap.read()
-    frame = cv2.resize(frame, (32, 32))
+    frame = cv2.resize(frame, (64, 64))
     cv2.imshow('Capture Images', frame)
 
     key = cv2.waitKey(1) & 0xFF
