@@ -16,7 +16,7 @@ def compute_hog_features(image):
     return features
 
 # Load the trained SVM classifier
-svm_classifier = joblib.load('trained_classifier_32bit.pkl')
+svm_classifier = joblib.load('trained_classifier_32bit_2.pkl')
 
 # Create a background subtractor
 background_subtractor = cv2.createBackgroundSubtractorMOG2()
@@ -34,6 +34,7 @@ desired_height = 32
 # Initialize variables for optical flow
 old_gray = None
 p0 = None
+no_movement_threshold = 0.2  # Adjust this threshold as needed
 
 while True:
     start_time = time.time()
@@ -81,15 +82,19 @@ while True:
 
             # Determine movement direction based on the components of the motion vector
             if np.abs(average_motion_vector[0]) > np.abs(average_motion_vector[1]):
-                if average_motion_vector[0] > 0:
+                if average_motion_vector[0] > no_movement_threshold:
                     print("Movement Direction: Right")
-                else:
+                elif average_motion_vector[0] < -no_movement_threshold:
                     print("Movement Direction: Left")
-            else:
-                if average_motion_vector[1] > 0:
-                    print("Movement Direction: Down")
                 else:
+                    print("No Operation (Not moving horizontally)")
+            else:
+                if average_motion_vector[1] > no_movement_threshold:
+                    print("Movement Direction: Down")
+                elif average_motion_vector[1] < -no_movement_threshold:
                     print("Movement Direction: Up")
+                else:
+                    print("No Operation (Not moving vertically)")
 
         # Update p0 for the next frame
         p0 = good_new.reshape(-1, 1, 2)

@@ -28,7 +28,10 @@ while True:
     elif key == ord('q'):
         break
 
+# Release the camera
 cap.release()
+
+# Close the window
 cv2.destroyAllWindows()
 
 # Save positive images

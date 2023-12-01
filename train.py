@@ -28,8 +28,7 @@ train_folder = 'train'
 
 all_images, all_image_paths = load_images_from_folder(train_folder)
 
-#Positive images are assumed to contain hands, and negative images are assumed to be non-hand objects or backgrounds.
-
+# Positive images are assumed to contain hands, and negative images are assumed to be non-hand objects or backgrounds.
 positive_images = [img for img, path in zip(all_images, all_image_paths) if 'positive' in os.path.basename(path)]
 negative_images = [img for img, path in zip(all_images, all_image_paths) if 'negative' in os.path.basename(path)]
 
@@ -37,7 +36,6 @@ negative_images = [img for img, path in zip(all_images, all_image_paths) if 'neg
 if not positive_images or not negative_images:
     print("Error: Insufficient data. Ensure there are images in both positive and negative classes.")
     exit()
-
 
 positive_labels = np.ones(len(positive_images))
 negative_labels = np.zeros(len(negative_images))
@@ -53,22 +51,30 @@ if len(images) == 0 or len(labels) == 0:
     exit()
 
 # Split the data into training and testing sets
-#test_size=0.2 means that 20% of the data will be reserved for testing, and the remaining 80% will be used for training.
-
-X_train, X_test, y_train, y_test = train_test_split(hog_features, labels, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test, train_image_paths, test_image_paths = train_test_split(hog_features, labels, all_image_paths, test_size=0.2, random_state=42)
 
 if len(X_train) == 0 or len(y_train) == 0:
     print("Error: Insufficient data. Ensure there are images in both positive and negative classes.")
     exit()
 
-# Training  -->   the SVM classifier
+# Training --> the SVM classifier
 svm_classifier = SVC(kernel='linear')
 svm_classifier.fit(X_train, y_train)
 
-# Save the trained classifier and the change the name upon using different image size other than in the train folder 
-joblib.dump(svm_classifier, 'trained_classifier_32bit.pkl')
+# Save the trained classifier and change the name upon using a different image size other than in the train folder
+joblib.dump(svm_classifier, 'trained_classifier_32bit_2.pkl')
 
 # Evaluate the classifier on the test set
 y_pred = svm_classifier.predict(X_test)
 accuracy = np.mean(y_pred == y_test)
 print(f'Test Accuracy: {accuracy * 100:.2f}%')
+
+# Print image names in the train set
+print("Images in Train Set:")
+for img_path in train_image_paths:
+    print(os.path.basename(img_path))
+
+# Print image names in the test set
+print("\nImages in Test Set:")
+for img_path in test_image_paths:
+    print(os.path.basename(img_path))
