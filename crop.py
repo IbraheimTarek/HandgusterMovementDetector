@@ -1,42 +1,54 @@
 import cv2
 import numpy as np
 
-# Read the image
-image = cv2.imread('train/positive_image_16.jpg')
+# Open a connection to the camera (0 represents the default camera)
+cap = cv2.VideoCapture(0)
 
-# Convert the image from BGR to HSV color space
-hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+# Create a background subtractor
+bg_subtractor = cv2.createBackgroundSubtractorMOG2()
 
-# Define the lower and upper bounds for the skin color in HSV
-lower_skin = np.array([0, 20, 70], dtype=np.uint8)
-upper_skin = np.array([20, 255, 255], dtype=np.uint8)
+while True:
+    # Read a frame from the camera
+    ret, frame = cap.read()
 
-# Threshold the image to get the binary mask for the skin color
-skin_mask = cv2.inRange(hsv, lower_skin, upper_skin)
+    # Apply background subtraction
+    fg_mask = bg_subtractor.apply(frame)
 
-# Apply morphological operations to remove noise
-kernel = np.ones((5, 5), np.uint8)
-skin_mask = cv2.erode(skin_mask, kernel, iterations=2)
-skin_mask = cv2.dilate(skin_mask, kernel, iterations=2)
+    # Remove noise and perform morphological operations
+    fg_mask = cv2.medianBlur(fg_mask, 5)
+    fg_mask = cv2.morphologyEx(fg_mask, cv2.MORPH_OPEN, np.ones((5, 5), np.uint8))
+    fg_mask = cv2.morphologyEx(fg_mask, cv2.MORPH_CLOSE, np.ones((5, 5), np.uint8))
 
-# Find contours in the skin mask
-contours, _ = cv2.findContours(skin_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    # Find contours in the foreground mask
+    contours, _ = cv2.findContours(fg_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-# Extract the bounding box of the largest contour (assuming it's the hand)
-if contours:
-    largest_contour = max(contours, key=cv2.contourArea)
-    x, y, w, h = cv2.boundingRect(largest_contour)
+    # Extract the bounding box of the largest contour (assuming it's the hand)
+    if contours:
+        largest_contour = max(contours, key=cv2.contourArea)
+        x, y, w, h = cv2.boundingRect(largest_contour)
 
-    # Crop the hand region
-    hand_region = image[y:y + h, x:x + w]
+        # Expand the bounding box to take a larger part of the image
+        padding = 20
+        x = max(0, x - padding)
+        y = max(0, y - padding)
+        w = min(frame.shape[1], w + 2 * padding)
+        h = min(frame.shape[0], h + 2 * padding)
 
-    # Draw contours on the original image
-    cv2.drawContours(image, [largest_contour], 0, (0, 255, 0), 2)
+        # Create a black canvas of the same size as the original frame
+        canvas = np.zeros_like(frame)
 
-    # Display the original and segmented images
-    cv2.imshow('Original Image', image)
-    cv2.imshow('Segmented Hand', hand_region)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-else:
-    print("No hand detected in the image.")
+        # Crop the hand region and paste it onto the black canvas
+        hand_region = frame[y:y + h, x:x + w]
+        canvas[y:y + h, x:x + w] = hand_region
+
+        # Display the original and cropped frames
+        cv2.imshow('Original Frame', frame)
+        cv2.imshow('Hand Region', canvas)
+
+    # Break the loop if 'q' key is pressed
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+# Release the camera and close all windows
+cap.release()
+cv2.destroyAllWindows()
