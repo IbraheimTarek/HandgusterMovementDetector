@@ -1,8 +1,8 @@
 import cv2
 import numpy as np
-from sklearn.svm import SVC
 from sklearn.model_selection import train_test_split
 from skimage.feature import hog
+from sklearn.neighbors import KNeighborsClassifier
 import joblib
 import os
 
@@ -57,15 +57,15 @@ if len(X_train) == 0 or len(y_train) == 0:
     print("Error: Insufficient data. Ensure there are images in both positive and negative classes.")
     exit()
 
-# Training --> the SVM classifier
-svm_classifier = SVC(kernel='linear')
-svm_classifier.fit(X_train, y_train)
+# Training --> the kNN classifier
+knn_classifier = KNeighborsClassifier(n_neighbors=5)  # You can adjust the number of neighbors (k) as needed
+knn_classifier.fit(X_train, y_train)
 
 # Save the trained classifier and change the name upon using a different image size other than in the train folder
-joblib.dump(svm_classifier, 'trained_classifier_64bit_V2.pkl')
+joblib.dump(knn_classifier, 'trained_knn_classifier_64bit_V2.pkl')
 
 # Evaluate the classifier on the test set
-y_pred = svm_classifier.predict(X_test)
+y_pred = knn_classifier.predict(X_test)
 accuracy = np.mean(y_pred == y_test)
 print(f'Test Accuracy: {accuracy * 100:.2f}%')
 
