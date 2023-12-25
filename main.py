@@ -85,13 +85,13 @@ def process_hog_features(frame_queue):
 def output_direction(loc):
     while not terminate_signal.is_set():
         classifier_output = args['classifier_res']
-        if loc == 0 and classifier_output:
+        if args['loc'] == 0 and classifier_output:
             pyautogui.press('down')
-        elif loc == 1 and classifier_output:
+        elif args['loc'] == 1 and classifier_output:
             pyautogui.press('right')
-        elif loc == 2 and classifier_output:
+        elif args['loc'] == 2 and classifier_output:
             pyautogui.press('up')
-        elif loc == 3 and classifier_output:
+        elif args['loc'] == 3 and classifier_output:
             pyautogui.press('left')
         else:
             pass
@@ -129,6 +129,7 @@ ap = ArgumentParser()
 ap.add_argument('-p', '--plot', default=False, action='store_true', help='Plot accumulators?')
 ap.add_argument('-rgb', '--rgb', default=False, action='store_true', help='Show RGB mask?')
 ap.add_argument('-classifier_res', '--classifier_res', default=False, action='store_true', help='Show classifier output?')
+ap.add_argument('-loc', '--loc', default=-1, type=int, help='location direction')
 args = vars(ap.parse_args())
 
 directions_map = np.zeros([10, 5])
@@ -154,11 +155,11 @@ hsv[:, :, 1] = 255
 
 gray_previous = cv2.cvtColor(gray_previous, cv2.COLOR_BGR2GRAY)
 
-loc = 0 
+loc = -1 
 hog_thread = threading.Thread(target=process_hog_features, args=(frame_queue,))
 hog_thread.start()
-#pyautogui_thread = threading.Thread(target=output_direction, args=(loc,))
-#pyautogui_thread.start()
+pyautogui_thread = threading.Thread(target=output_direction, args=(loc,))
+pyautogui_thread.start()
 while True:
     # Read a frame from the camera
     ret, frame = cap.read()
@@ -256,6 +257,7 @@ while True:
         plt.show()
 
     loc = directions_map.mean(axis=0).argmax()
+    args['loc'] = loc
     classifier_output = args['classifier_res']
     if loc == 0 and classifier_output:
         text = 'Moving down'
