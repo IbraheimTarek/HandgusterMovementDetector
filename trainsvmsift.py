@@ -4,6 +4,7 @@ from sklearn.svm import SVC
 from sklearn.model_selection import train_test_split
 from skimage.feature import hog
 from skimage.filters import gaussian
+from sklearn.preprocessing import StandardScaler
 import joblib
 import os
 
@@ -13,6 +14,9 @@ def compute_sift_features(image):
     keypoints, descriptors = sift.detectAndCompute(gray, None)
     return descriptors.flatten() if descriptors is not None else np.array([])
 
+def pad_features(features, max_length):
+    padded_features = [np.pad(f, (0, max_length - len(f)), mode='constant') for f in features]
+    return np.array(padded_features)
 
 def resize_image(image, new_width, new_height):
     return cv2.resize(image, (new_width, new_height))
@@ -66,12 +70,16 @@ if len(images) == 0 or len(labels) == 0:
     print("Error: Insufficient data. Ensure there are images in both positive and negative classes.")
     exit()
 
-# Split the data into training and testing sets
-X_train, X_test, y_train, y_test, train_image_paths, test_image_paths = train_test_split(sift_features, labels, all_image_paths, test_size=0.2, random_state=42)
+# Find the maximum length of SIFT features
+max_sift_length = max(len(feature) for feature in sift_features)
 
-if len(X_train) == 0 or len(y_train) == 0:
-    print("Error: Insufficient data. Ensure there are images in both positive and negative classes.")
-    exit()
+# Pad the SIFT features to the maximum length
+sift_features_padded = pad_features(sift_features, max_sift_length)
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test, train_image_paths, test_image_paths = train_test_split(sift_features_padded, labels, all_image_paths, test_size=0.2, random_state=42)
+
+# ... (unchanged)
 
 # Training --> the SVM classifier
 svm_classifier_sift = SVC(kernel='linear')
