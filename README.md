@@ -1,2 +1,0 @@
-# HandgusterMovementDetector
-HandgusterMovementDetector-IPPoject
