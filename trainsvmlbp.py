@@ -2,17 +2,25 @@ import cv2
 import numpy as np
 from sklearn.svm import SVC
 from sklearn.model_selection import train_test_split
-from skimage.feature import hog
 from skimage.filters import gaussian
+from skimage.feature import local_binary_pattern
 import joblib
 import os
 
-def compute_sift_features(image):
+# Function to compute LBP features
+def compute_lbp_features(image):
+    # Convert the image to grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    sift = cv2.SIFT_create()
-    keypoints, descriptors = sift.detectAndCompute(gray, None)
-    return descriptors.flatten() if descriptors is not None else np.array([])
 
+    # Apply Gaussian blur for noise reduction
+    blurred_image = gaussian(gray, sigma=0.01)
+
+    # Compute LBP features
+    lbp_radius = 3
+    lbp_points = 8 * lbp_radius
+    lbp = local_binary_pattern(blurred_image, lbp_points, lbp_radius, method='uniform')
+    
+    return lbp.flatten()
 
 def resize_image(image, new_width, new_height):
     return cv2.resize(image, (new_width, new_height))
@@ -52,35 +60,33 @@ if not positive_images or not negative_images:
     print("Error: Insufficient data. Ensure there are images in both positive and negative classes.")
     exit()
 
+images = positive_images + negative_images
 positive_labels = np.ones(len(positive_images))
 negative_labels = np.zeros(len(negative_images))
-
-# Combine positive and negative data
-images = positive_images + negative_images
 labels = np.concatenate([positive_labels, negative_labels])
 all_image_paths = positive_image_paths + negative_image_paths
 
-# Extract SIFT features for each image
-sift_features = [compute_sift_features(img) for img in images]
+# Extract LBP features for each image
+lbp_features = [compute_lbp_features(img) for img in images]
 if len(images) == 0 or len(labels) == 0:
     print("Error: Insufficient data. Ensure there are images in both positive and negative classes.")
     exit()
 
 # Split the data into training and testing sets
-X_train, X_test, y_train, y_test, train_image_paths, test_image_paths = train_test_split(sift_features, labels, all_image_paths, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test, train_image_paths, test_image_paths = train_test_split(lbp_features, labels, all_image_paths, test_size=0.2, random_state=42)
 
 if len(X_train) == 0 or len(y_train) == 0:
     print("Error: Insufficient data. Ensure there are images in both positive and negative classes.")
     exit()
 
 # Training --> the SVM classifier
-svm_classifier_sift = SVC(kernel='linear')
-svm_classifier_sift.fit(X_train, y_train)
+svm_classifier_lbp = SVC(kernel='linear')
+svm_classifier_lbp.fit(X_train, y_train)
 
-# Save the trained classifier
-joblib.dump(svm_classifier_sift, 'trained_classifier_sift.pkl')
+# Save the trained classifier and change the name upon using a different image size other than in the train folder
+joblib.dump(svm_classifier_lbp, 'trained_classifier_lbp.pkl')
 
 # Evaluate the classifier on the test set
-y_pred = svm_classifier_sift.predict(X_test)
+y_pred = svm_classifier_lbp.predict(X_test)
 accuracy = np.mean(y_pred == y_test)
 print(f'Test Accuracy: {accuracy * 100:.2f}%')
