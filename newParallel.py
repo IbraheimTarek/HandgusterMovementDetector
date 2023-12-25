@@ -16,19 +16,29 @@ def compute_hog_features(image):
 def process_frame(frame):
     frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     
+    # Apply background subtraction
     fg_mask = background_subtractor.apply(frame_gray)
-    kernel = np.ones((5, 5), np.uint8)
+    
+    # Define the kernel
+    kernel = np.ones((0, 0), np.uint8)
+
+    # Enhance the visibility of the moving part in the foreground mask
     fg_mask = cv2.morphologyEx(fg_mask, cv2.MORPH_OPEN, kernel)
     fg_mask = cv2.morphologyEx(fg_mask, cv2.MORPH_CLOSE, kernel)
-
+    
+    # Segment the hand using bitwise AND with the original frame
     segmented_hand = cv2.bitwise_and(frame, frame, mask=fg_mask)
 
-    hog_features = compute_hog_features(frame)
+    # Compute HOG features for the frame
+    hog_features = compute_hog_features(segmented_hand)
     hog_features = hog_features.reshape(1, -1)
 
+    # Predict the orientation using the SVM classifier
     orientation_prediction = svm_classifier.predict(hog_features)
 
     return frame_gray, fg_mask, segmented_hand, orientation_prediction
+
+
 
 def output_direction(good_new, good_old,orientation_prediction):
     if len(good_new) > 0:
@@ -54,7 +64,7 @@ def output_direction(good_new, good_old,orientation_prediction):
                 print("No Operation (Not moving vertically)")
 
 # Load the trained SVM classifier
-svm_classifier = joblib.load('trained_classifier_64bit.pkl')
+svm_classifier = joblib.load('trained_classifier_V3.pkl')
 
 # Create a background subtractor
 background_subtractor = cv2.createBackgroundSubtractorMOG2()
@@ -63,8 +73,8 @@ background_subtractor = cv2.createBackgroundSubtractorMOG2()
 cap = cv2.VideoCapture(0)
 
 # Set the desired width and height for the resized frame
-desired_width = 64
-desired_height = 64
+desired_width = 320
+desired_height = 180
 
 # Initialize variables for optical flow
 old_gray = None
@@ -119,3 +129,4 @@ with concurrent.futures.ThreadPoolExecutor() as executor:
 # Release the camera and close all windows
 cap.release()
 cv2.destroyAllWindows()
+

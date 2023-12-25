@@ -1,6 +1,9 @@
 import cv2
 import os
 
+def apply_gaussian_blur(image):
+    return cv2.GaussianBlur(image, (5, 5), 0)
+
 cap = cv2.VideoCapture(0)
 
 image_count = 0
@@ -9,7 +12,6 @@ negative_images = []
 
 while True:
     ret, frame = cap.read()
-    frame = cv2.resize(frame, (64, 64))
     cv2.imshow('Capture Images', frame)
 
     key = cv2.waitKey(1) & 0xFF
@@ -34,23 +36,15 @@ cap.release()
 # Close the window
 cv2.destroyAllWindows()
 
-# Save positive images
+# Apply Gaussian blur to positive images and save
 for i, img in enumerate(positive_images):
-    # Find a unique filename
-    img_number = 1
-    while os.path.exists(f'positive_image_{img_number}.jpg'):
-        img_number += 1
+    blurred_img = apply_gaussian_blur(img)
+    cv2.imwrite(f'positive_image_{i + 1}.jpg', blurred_img)
 
-    cv2.imwrite(f'positive_image_{img_number}.jpg', img)
-
-# Save negative images
+# Apply Gaussian blur to negative images and save
 for i, img in enumerate(negative_images):
-    # Find a unique filename
-    img_number = 1
-    while os.path.exists(f'negative_image_{img_number}.jpg'):
-        img_number += 1
-
-    cv2.imwrite(f'negative_image_{img_number}.jpg', img)
+    blurred_img = apply_gaussian_blur(img)
+    cv2.imwrite(f'negative_image_{i + 1}.jpg', blurred_img)
 
 print(f'Total positive images: {len(positive_images)}')
 print(f'Total negative images: {len(negative_images)}')

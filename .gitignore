@@ -1,2 +1,5 @@
 *.jpg
+traindataset
 *.pkl
+*.png
+optical.py
