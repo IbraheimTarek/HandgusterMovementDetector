@@ -82,6 +82,24 @@ def process_hog_features(frame_queue):
             pass  # Ignore empty queue (no new frames)
 
 
+def output_direction(loc):
+    while not terminate_signal.is_set():
+        classifier_output = args['classifier_res']
+        if loc == 0 and classifier_output:
+            pyautogui.press('down')
+        elif loc == 1 and classifier_output:
+            pyautogui.press('right')
+        elif loc == 2 and classifier_output:
+            pyautogui.press('up')
+        elif loc == 3 and classifier_output:
+            pyautogui.press('left')
+        else:
+            pass
+
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+
 
 def predict_class_hog(hog_features, classifier):
     # Ensure hog_features is a 2D array
@@ -136,10 +154,11 @@ hsv[:, :, 1] = 255
 
 gray_previous = cv2.cvtColor(gray_previous, cv2.COLOR_BGR2GRAY)
 
-
+loc = 0 
 hog_thread = threading.Thread(target=process_hog_features, args=(frame_queue,))
 hog_thread.start()
-
+#pyautogui_thread = threading.Thread(target=output_direction, args=(loc,))
+#pyautogui_thread.start()
 while True:
     # Read a frame from the camera
     ret, frame = cap.read()
