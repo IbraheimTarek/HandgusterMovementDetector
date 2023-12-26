@@ -20,8 +20,8 @@ def optical_flow(old_frame, new_frame, window_size, min_quality=0.01):
     ft = cv2.filter2D(new_frame, -1, kernel_t) - cv2.filter2D(old_frame, -1, kernel_t)  #Gradient over Time
 
 
-    u = np.zeros(old_frame.shape)
-    v = np.zeros(old_frame.shape)
+    horizontal_component = np.zeros(old_frame.shape)
+    vertical_component = np.zeros(old_frame.shape)
 
     for feature in cv_features:        
             j, i = feature.ravel()		
@@ -31,12 +31,12 @@ def optical_flow(old_frame, new_frame, window_size, min_quality=0.01):
             I_y = fy[i-w:i+w+1, j-w:j+w+1].flatten()
             I_t = ft[i-w:i+w+1, j-w:j+w+1].flatten()
 
-            b = np.reshape(I_t, (I_t.shape[0],1))
-            A = np.vstack((I_x, I_y)).T
+            time = np.reshape(I_t, (I_t.shape[0],1))
+            local = np.vstack((I_x, I_y)).T
 
-            U = np.matmul(np.linalg.pinv(A), b)   
+            timeXlocal = np.matmul(np.linalg.pinv(local), time)
 
-            u[i,j] = U[0][0]
-            v[i,j] = U[1][0]
+            horizontal_component[i,j] = timeXlocal[0][0]
+            vertical_component[i,j] = timeXlocal[1][0]
  
-    return (u,v)
+    return (horizontal_component,horizontal_component)
